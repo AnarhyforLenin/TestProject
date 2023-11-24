@@ -10,7 +10,6 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
@@ -24,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private AnimatorSet animatorSetUpAndDown;
     private AnimatorSet animatorSetGeneral;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,29 +40,15 @@ public class MainActivity extends AppCompatActivity {
         animatorSetUpAndDown = new AnimatorSet();
 
         View rootView = findViewById(android.R.id.content);
-        rootView.setOnTouchListener(new View.OnTouchListener() {
-            @SuppressLint("ClickableViewAccessibility")
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                stopAllAnimations();
-                moveText(event.getX(), event.getY());
-                textView.setTextColor(getResources().getColor(R.color.change_color));
-                handler.removeCallbacksAndMessages(null);
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        getAllAnimations().start();
-                    }
-                }, 5000);
-                return true;
-            }
+        rootView.setOnTouchListener((v, event) -> {
+            stopAllAnimations();
+            moveText(event.getX(), event.getY());
+            textView.setTextColor(getResources().getColor(R.color.change_color));
+            handler.removeCallbacksAndMessages(null);
+            handler.postDelayed(() -> getAllAnimations().start(), 5000);
+            return true;
         });
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                stopAllAnimations();
-            }
-        });
+        textView.setOnClickListener(view -> stopAllAnimations());
     }
 
     private void moveText(float x, float y) {
@@ -71,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private AnimatorSet getAllAnimations() {
-
         animatorDownFromObjectState = ObjectAnimator.ofFloat(textView,"translationY", textView.getTranslationY(), height / 2.2f);
         animatorDownFromObjectState.setDuration(3000);
         animatorDown = ObjectAnimator.ofFloat(textView,"translationY", -(height / 2.2f), height / 2.2f);
