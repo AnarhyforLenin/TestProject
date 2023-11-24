@@ -6,6 +6,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
@@ -17,13 +18,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView textView;
     private int height;
     private Handler handler;
-    private ObjectAnimator animationDown2;
-    private ObjectAnimator animationDown;
-    private ObjectAnimator animationUp;
-    private AnimatorSet animatorSet;
+    private ObjectAnimator animatorDownFromObjectState;
+    private ObjectAnimator animatorDown;
+    private ObjectAnimator animatorUp;
+    private AnimatorSet animatorSetUpAndDown;
     private AnimatorSet animatorSetGeneral;
-    private DisplayMetrics displayMetrics;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,26 +31,27 @@ public class MainActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.textView);
 
-        displayMetrics = new DisplayMetrics();
+        DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
 
         handler = new Handler();
         animatorSetGeneral = new AnimatorSet();
-        animatorSet = new AnimatorSet();
+        animatorSetUpAndDown = new AnimatorSet();
 
         View rootView = findViewById(android.R.id.content);
         rootView.setOnTouchListener(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                stopAnimator();
+                stopAllAnimations();
                 moveText(event.getX(), event.getY());
                 textView.setTextColor(getResources().getColor(R.color.change_color));
                 handler.removeCallbacksAndMessages(null);
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        stA().start();
+                        getAllAnimations().start();
                     }
                 }, 5000);
                 return true;
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopAnimator();
+                stopAllAnimations();
             }
         });
     }
@@ -70,22 +70,22 @@ public class MainActivity extends AppCompatActivity {
         textView.setY(y - (textView.getHeight() >> 1));
     }
 
-    private AnimatorSet stA() {
+    private AnimatorSet getAllAnimations() {
 
-        animationDown2 = ObjectAnimator.ofFloat(textView,"translationY", textView.getTranslationY(), height / 2.2f);
-        animationDown2.setDuration(3000);
-        animationDown = ObjectAnimator.ofFloat(textView,"translationY", -(height / 2.2f), height / 2.2f);
-        animationDown.setDuration(3000);
-        animationUp = ObjectAnimator.ofFloat(textView,"translationY", height / 2.2f, -(height / 2.2f));
-        animationUp.setDuration(3000);
+        animatorDownFromObjectState = ObjectAnimator.ofFloat(textView,"translationY", textView.getTranslationY(), height / 2.2f);
+        animatorDownFromObjectState.setDuration(3000);
+        animatorDown = ObjectAnimator.ofFloat(textView,"translationY", -(height / 2.2f), height / 2.2f);
+        animatorDown.setDuration(3000);
+        animatorUp = ObjectAnimator.ofFloat(textView,"translationY", height / 2.2f, -(height / 2.2f));
+        animatorUp.setDuration(3000);
 
-        animatorSet.playSequentially(animationUp, animationDown);
-        animatorSetGeneral.play(animationDown2).before(animatorSet);
+        animatorSetUpAndDown.playSequentially(animatorUp, animatorDown);
+        animatorSetGeneral.play(animatorDownFromObjectState).before(animatorSetUpAndDown);
 
-        animatorSet.addListener(new AnimatorListenerAdapter() {
+        animatorSetUpAndDown.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                animatorSet.start();
+                animatorSetUpAndDown.start();
             }
         });
 
@@ -93,23 +93,23 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void stopAnimator() {
-        if (animationDown2 != null) {
-            animationDown2.cancel();
+    private void stopAllAnimations() {
+        if (animatorDownFromObjectState != null) {
+            animatorDownFromObjectState.cancel();
         }
-        if (animationDown != null) {
-            animationDown.cancel();
+        if (animatorDown != null) {
+            animatorDown.cancel();
         }
-        if (animationUp != null) {
-            animationUp.cancel();
+        if (animatorUp != null) {
+            animatorUp.cancel();
         }
-        if (animatorSet != null) {
-            animatorSet.removeAllListeners();
-            animatorSet.cancel();
+        if (animatorSetUpAndDown != null) {
+            animatorSetUpAndDown.removeAllListeners();
+            animatorSetUpAndDown.cancel();
         }
-        if (stA().isRunning()) {
-            stA().removeAllListeners();
-            stA().cancel();
+        if (getAllAnimations().isRunning()) {
+            getAllAnimations().removeAllListeners();
+            getAllAnimations().cancel();
         }
     }
 }
